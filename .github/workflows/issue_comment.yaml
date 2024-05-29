@@ -1,0 +1,19 @@
+name: issue-comment-workflow
+on: issue_comment
+
+jobs:
+  # Pull Request에 comment를 작성한 경우 트리거
+  pr-comment:
+    if: ${{ github.event.issue.pull_request }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: pr comment
+      run: echo ${{ github.event.issue.pull_request }}
+
+  # issue에 comment를 작성한 경우 트리거
+  issue-comment:
+    if: ${{ !github.event.issue.pull_request }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: issue comment
+      run: echo ${{ github.event.issue.pull_request }}
