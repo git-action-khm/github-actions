@@ -1,0 +1,64 @@
+name: issue-notify
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  get-keyword:
+    # 최신 Ubuntu 운영체제에서 실행
+    runs-on: ubuntu-latest
+    outputs:
+      level: ${{ steps.get-keyword.outputs.level }}
+    steps:
+    # 저장소의 코드를 가져와서 워크플로 실행 환경에 복사
+    - name: checkout 
+      uses: actions/checkout@v4
+    # 주어진 키워드 리스트(keyword-list.txt)와 이슈 제목을 비교하여, 제목에 포함된 키워드가 있다면 level 값을 해당 키워드로 설정
+    - name: get keyword
+      id: get-keyword # 참조를 위한 ID
+      run: |
+        echo level=Undefined >> $GITHUB_OUTPUT
+        
+        keywords=$(cat keyword-list.txt)
+        for keyword in $keywords; do
+          if [[ "${{ github.event.issue.title }}" =~ "$keyword" ]]; then
+            echo level=$keyword >> $GITHUB_OUTPUT
+          fi
+        done
+    - name: get output
+      run: |
+        echo ${{ steps.get-keyword.outputs.level }}
+  
+  slack:
+    needs: [get-keyword]
+    if: needs.get-keyword.outputs.level != 'Undefined'
+    runs-on: ubuntu-latest
+    # environment: ${{ needs.get-keyword.outputs.level }}
+    strategy:
+      matrix:
+        environment: ["${{ needs.get-keyword.outputs.level }}"]
+    environment: ${{ matrix.environment }}
+    steps:
+    - name: slack 
+      uses: slackapi/slack-github-action@v1.24.0
+      with:
+        payload: |
+          {
+            "attachments": [
+              {
+                "pretext": "issue alert message",
+                "color": "28a745",
+                "fields": [
+                  {
+                    "title": "Level : ${{ needs.get-keyword.outputs.level }}",
+                    "short": true,
+                    "value": "issue url : ${{ github.event.issue.html_url }}"
+                  }
+                ]
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
