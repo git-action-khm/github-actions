@@ -1,0 +1,30 @@
+name: create-repo
+on:
+  workflow_dispatch:
+    inputs:
+      prefix:
+        description: 'set repo prefix'
+        required: true
+        default: 'service'
+        type: choice
+        options:
+        - example
+        - service
+      name:
+        description: 'set repo name'
+        required: true
+        default: 'github-actions'
+        type: string
+
+jobs:
+  create-repo-automation:
+    runs-on: ubuntu-latest
+    steps:
+    # github action job에서 github 권한을 사용할 수 있게하는 단계
+    - name: gh auth login
+      run: |
+        echo ${{ secrets.PERSONAL_ACCESS_TOKEN }} | gh auth login --with-token
+    # 레포지토리를 생성하는 단계
+    - name: create-repo
+      run: |
+        gh repo create git-action-khm/${{ inputs.prefix }}-${{ inputs.name }} --public --add-readme
