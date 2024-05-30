@@ -31,7 +31,7 @@ jobs:
         gh repo create git-action-khm/${{ inputs.prefix }}-${{ inputs.name }} --public --add-readme
     # 레포지토리 생성 결과를 슬랙에 보내는 단계
     - name: slack 
-      if: always()
+      if: always() # 이전 단계의 실패와 상관없이 현재 단계를 실행시키는 명령
       uses: slackapi/slack-github-action@v1.24.0
       with:
         payload: |
